@@ -68,6 +68,7 @@ var table_fmt = {
 	38: '#,##0 ;[Red](#,##0)',
 	39: '#,##0.00;(#,##0.00)',
 	40: '#,##0.00;[Red](#,##0.00)',
+	44: '_("$"* #,##0.00_);_("$"* \(#,##0.00\);_("$"* "-"??_);_(@_)',
 	45: 'mm:ss',
 	46: '[h]:mm:ss',
 	47: 'mmss.0',
@@ -2297,7 +2298,7 @@ function write_sty_xml(wb, opts) {
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (STYLES_XML_ROOT);
 	if((w = write_numFmts(wb.SSF))) o[o.length] = (w);
-	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
+	o[o.length] = ('<fonts count="2"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font><font><b/><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
 	o[o.length] = ('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');
 	o[o.length] = ('<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>');
 	o[o.length] = ('<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>');
@@ -2685,16 +2686,18 @@ function get_sst_id(sst, str) {
 }
 
 function get_cell_style(styles, cell, opts) {
-	var z = opts.revssf[cell.z != null ? cell.z : "General"];
-	for(var i = 0; i != styles.length; ++i) if(styles[i].numFmtId === z) return i;
+	var z = opts.revssf[cell.z||cell.b||"General"];
+	for(var i = 0; i != styles.length; ++i) if(styles[i].numFmtId === z || (cell.b && styles[i].fontId === 1 && styles[i].numFmtId === 0 && !z)) return i;
 	styles[styles.length] = {
-		numFmtId:z,
+		numFmtId:z || 0,
 		fontId:0,
 		fillId:0,
 		borderId:0,
 		xfId:0,
 		applyNumberFormat:1
 	};
+	if (cell.b) styles[styles.length-1].fontId = 1;
+	if (styles[styles.length-1].numFmtId === 0) styles[styles.length-1].applyNumberFormat = 0;
 	return styles.length-1;
 }
 
@@ -2860,6 +2863,10 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 		case 'n': break;
 		case 'b': o.t = "b"; break;
 		case 'e': o.t = "e"; break;
+		case 'f':
+			vv = cell.f;
+			var f = writextag('f', escapexml(vv)); 
+			v = f+v; break;
 	}
 	return writextag('c', v, o);
 }

@@ -135,6 +135,10 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 		case 'n': break;
 		case 'b': o.t = "b"; break;
 		case 'e': o.t = "e"; break;
+		case 'f':
+			vv = cell.f;
+			var f = writextag('f', escapexml(vv)); 
+			v = f+v; break;
 	}
 	return writextag('c', v, o);
 }

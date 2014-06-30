@@ -9,8 +9,8 @@ function get_sst_id(sst, str) {
 }
 
 function get_cell_style(styles, cell, opts) {
-	var z = opts.revssf[cell.z != null ? cell.z : "General"];
-	for(var i = 0; i != styles.length; ++i) if(styles[i].numFmtId === z) return i;
+	var z = opts.revssf[cell.z||cell.b||"General"];
+	for(var i = 0; i != styles.length; ++i) if(styles[i].numFmtId === z || (cell.b && styles[i].fontId === 1 && styles[i].numFmtId === 0 && !z)) return i;
 	styles[styles.length] = {
 		numFmtId:z,
 		fontId:0,
@@ -19,6 +19,8 @@ function get_cell_style(styles, cell, opts) {
 		xfId:0,
 		applyNumberFormat:1
 	};
+	if (cell.b) styles[styles.length-1].fontId = 1;
+	if (styles[styles.length-1].numFmtId === 0) styles[styles.length-1].applyNumberFormat = 0;
 	return styles.length-1;
 }
 
