@@ -18,7 +18,6 @@ var wscols = [
 	{wch:20}
 ];
 
-
 console.log("Sheet Name: " + ws_name);
 console.log("Data: "); for(var i=0; i!=data.length; ++i) console.log(data[i]);
 console.log("Columns :"); for(i=0; i!=wscols.length;++i) console.log(wscols[i]);

@@ -111,6 +111,18 @@ function write_cellXfs(cellXfs) {
 	return o.join("");
 }
 
+function write_dxfs(dxfs) {
+	var o = ['<dxfs count="' + dxfs.length + '">'], c, pf, f, dxf;
+	for(var i = 0; i != dxfs.length; ++i) {
+		c = writextag('bgColor', null, {rgb: dxfs[i]});
+		pf = writextag('patternFill', c);
+		f = writextag('fill', pf);
+		o[o.length] = writextag('dxf', f);
+	}
+	o[o.length] = '</dxfs>';
+	return o.join("");
+}
+
 /* 18.8 Styles CT_Stylesheet*/
 function parse_sty_xml(data, opts) {
 	/* 18.8.39 styleSheet CT_Stylesheet */
@@ -146,7 +158,7 @@ var STYLES_XML_ROOT = writextag('styleSheet', null, {
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 
 function write_sty_xml(wb, opts) {
-	var o = [], p = {}, w;
+	var o = [], p = {}, w, d;
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (STYLES_XML_ROOT);
 	if((w = write_numFmts(wb.SSF))) o[o.length] = (w);
@@ -156,7 +168,7 @@ function write_sty_xml(wb, opts) {
 	o[o.length] = ('<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>');
 	if((w = write_cellXfs(opts.cellXfs))) o[o.length] = (w);
 	o[o.length] = ('<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>');
-	o[o.length] = ('<dxfs count="0"/>');
+	if((d = write_dxfs(opts.dxfs))) o[o.length] = (d);
 	o[o.length] = ('<tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>');
 
 	if(o.length>2){ o[o.length] = ('</styleSheet>'); o[1]=o[1].replace("/>",">"); }

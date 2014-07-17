@@ -113,6 +113,19 @@ function write_ws_xml_cols(ws, cols) {
 	return o.join("");
 }
 
+function write_ws_xml_cf(ws, opts, cf) {
+	var o = [], p;
+	for(var i = 0; i != cf.length; ++i) {
+		p = {};
+		var f = writextag('formula', escapexml(cf[i].f));
+		p.type = "expression"; p.priority = "1"; // Hard-coded for now...
+		if(cf[i].dxf) p.dfxId = get_dxf(opts.dxfs, cf[i]);
+		var r = writextag('cfRule', f, {type:"expression", dxfId:get_dxf(opts.dxfs, cf[i]), priority:"1"});
+		o[o.length] = writextag('conditionalFormatting', r, {sqref:cf[i].r});
+	}
+	return o.join("");
+}
+
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 	if(cell.v === undefined) return "";
 	var vv = "";
@@ -265,7 +278,7 @@ function write_ws_xml(idx, opts, wb) {
 	if(ws['!ref']) rdata = write_ws_xml_data(ws, opts, idx, wb);
 	if(rdata.length) o[o.length] = (rdata);
 	if(o.length>sidx+1) { o[o.length] = ('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
-
+	if((ws['!cf']||[]).length > 0) o[o.length] = (write_ws_xml_cf(ws, opts, ws['!cf']));
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

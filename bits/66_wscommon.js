@@ -24,6 +24,13 @@ function get_cell_style(styles, cell, opts) {
 	return styles.length-1;
 }
 
+function get_dxf(dxfs, cf, opts) {
+	var z = cf.dxf;
+	for(var i = 0; i != dxfs.length; ++i) if(dxfs[i] === z) return i;
+	dxfs[dxfs.length] = z;
+	return dxfs.length-1;
+}
+
 function safe_format(p, fmtid, fillid, opts) {
 	try {
 		if(fmtid === 0) {
