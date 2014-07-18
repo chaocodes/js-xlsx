@@ -25,9 +25,9 @@ function get_cell_style(styles, cell, opts) {
 }
 
 function get_dxf(dxfs, cf, opts) {
-	var z = cf.dxf;
-	for(var i = 0; i != dxfs.length; ++i) if(dxfs[i] === z) return i;
-	dxfs[dxfs.length] = z;
+	var bg = cf.bg, it = cf.i, c = cf.c;
+	for(var i = 0; i != dxfs.length; ++i) if(dxfs[i].bg === bg && dxfs[i].i === it && dxfs[i].c === c) return i;
+	dxfs[dxfs.length] = cf;
 	return dxfs.length-1;
 }
 

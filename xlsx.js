@@ -2259,16 +2259,36 @@ function write_cellXfs(cellXfs) {
 	return o.join("");
 }
 
-// Chao
 function write_dxfs(dxfs) {
-	var o = ['<dxfs count="' + dxfs.length + '">'], c, pf, f, dxf;
+	var o = ['<dxfs count="' + dxfs.length + '">'], bg, pf, f, font, dxf;
 	for(var i = 0; i != dxfs.length; ++i) {
-		c = writextag('bgColor', null, {rgb: dxfs[i]});
-		pf = writextag('patternFill', c);
-		f = writextag('fill', pf);
-		o[o.length] = writextag('dxf', f);
+		dxf = [], font = [];
+		if(dxfs[i].i) {
+			font[font.length] = writextag('b', null, {val:"0"});
+			font[font.length] = writextag('i', null);
+		}
+		if(dxfs[i].c) font[font.length] = writextag('color', null, {rgb: dxfs[i].c});
+		if(font.length > 0) {
+			font = font.join("");
+			dxf[dxf.length] = writextag('font', font);
+		}
+		bg = writextag('bgColor', null, {rgb: dxfs[i].bg});
+		pf = writextag('patternFill', bg);
+		if(dxfs[i].bg) dxf[dxf.length] = writextag('fill', pf);
+		dxf = dxf.join("");
+		o[o.length] = writextag('dxf', dxf);
 	}
 	o[o.length] = '</dxfs>';
+	return o.join("");
+}
+
+function write_colors(dxfs) {
+	var o = ['<colors><mruColors>'];
+	for(var i = 0; i != dxfs.length; ++i) {
+		if(dxfs[i].c) o[o.length] = writextag('color', null, {rgb: dxfs[i].c});
+		if(dxfs[i].bg) o[o.length] = writextag('color', null, {rgb: dxfs[i].bg});
+	}
+	o[o.length] = ['</mruColors></colors>'];
 	return o.join("");
 }
 
@@ -2307,7 +2327,7 @@ var STYLES_XML_ROOT = writextag('styleSheet', null, {
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 
 function write_sty_xml(wb, opts) {
-	var o = [], p = {}, w, d;
+	var o = [], p = {}, w, d, c;
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (STYLES_XML_ROOT);
 	if((w = write_numFmts(wb.SSF))) o[o.length] = (w);
@@ -2317,13 +2337,13 @@ function write_sty_xml(wb, opts) {
 	o[o.length] = ('<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>');
 	if((w = write_cellXfs(opts.cellXfs))) o[o.length] = (w);
 	o[o.length] = ('<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>');
-	// Chao
 	if((d = write_dxfs(opts.dxfs))) o[o.length] = (d);
 	o[o.length] = ('<tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>');
-
+	if((c = write_colors(opts.dxfs))) o[o.length] = (c);
 	if(o.length>2){ o[o.length] = ('</styleSheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }
+
 /* [MS-XLSB] 2.4.651 BrtFmt */
 function parse_BrtFmt(data, length) {
 	var ifmt = data.read_shift(2);
@@ -2715,11 +2735,10 @@ function get_cell_style(styles, cell, opts) {
 	return styles.length-1;
 }
 
-// Chao
 function get_dxf(dxfs, cf, opts) {
-	var z = cf.dxf;
-	for(var i = 0; i != dxfs.length; ++i) if(dxfs[i] === z) return i;
-	dxfs[dxfs.length] = z;
+	var bg = cf.bg, it = cf.i, c = cf.c;
+	for(var i = 0; i != dxfs.length; ++i) if(dxfs[i].bg === bg && dxfs[i].i === it && dxfs[i].c === c) return i;
+	dxfs[dxfs.length] = cf;
 	return dxfs.length-1;
 }
 
@@ -2863,15 +2882,14 @@ function write_ws_xml_cols(ws, cols) {
 	return o.join("");
 }
 
-// Chao
 function write_ws_xml_cf(ws, opts, cf) {
 	var o = [], p;
 	for(var i = 0; i != cf.length; ++i) {
 		p = {};
 		var f = writextag('formula', escapexml(cf[i].f));
-		p.type = "expression"; p.priority = "1"; // Hard-coded for now...
-		if(cf[i].dxf) p.dfxId = get_dxf(opts.dxfs, cf[i]);
-		var r = writextag('cfRule', f, {type:"expression", dxfId:get_dxf(opts.dxfs, cf[i]), priority:"1"});
+		p.type = "expression"; p.priority = (i+1).toString();
+		if(cf[i]) p.dxfId = get_dxf(opts.dxfs, cf[i]);
+		var r = writextag('cfRule', f, p);
 		o[o.length] = writextag('conditionalFormatting', r, {sqref:cf[i].r});
 	}
 	return o.join("");
@@ -3029,7 +3047,6 @@ function write_ws_xml(idx, opts, wb) {
 	if(ws['!ref']) rdata = write_ws_xml_data(ws, opts, idx, wb);
 	if(rdata.length) o[o.length] = (rdata);
 	if(o.length>sidx+1) { o[o.length] = ('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
-	// Chao
 	if((ws['!cf']||[]).length > 0) o[o.length] = (write_ws_xml_cf(ws, opts, ws['!cf']));
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");

@@ -118,9 +118,9 @@ function write_ws_xml_cf(ws, opts, cf) {
 	for(var i = 0; i != cf.length; ++i) {
 		p = {};
 		var f = writextag('formula', escapexml(cf[i].f));
-		p.type = "expression"; p.priority = "1"; // Hard-coded for now...
-		if(cf[i].dxf) p.dfxId = get_dxf(opts.dxfs, cf[i]);
-		var r = writextag('cfRule', f, {type:"expression", dxfId:get_dxf(opts.dxfs, cf[i]), priority:"1"});
+		p.type = "expression"; p.priority = (i+1).toString();
+		if(cf[i]) p.dxfId = get_dxf(opts.dxfs, cf[i]);
+		var r = writextag('cfRule', f, p);
 		o[o.length] = writextag('conditionalFormatting', r, {sqref:cf[i].r});
 	}
 	return o.join("");

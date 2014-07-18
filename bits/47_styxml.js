@@ -112,14 +112,35 @@ function write_cellXfs(cellXfs) {
 }
 
 function write_dxfs(dxfs) {
-	var o = ['<dxfs count="' + dxfs.length + '">'], c, pf, f, dxf;
+	var o = ['<dxfs count="' + dxfs.length + '">'], bg, pf, f, font, dxf;
 	for(var i = 0; i != dxfs.length; ++i) {
-		c = writextag('bgColor', null, {rgb: dxfs[i]});
-		pf = writextag('patternFill', c);
-		f = writextag('fill', pf);
-		o[o.length] = writextag('dxf', f);
+		dxf = [], font = [];
+		if(dxfs[i].i) {
+			font[font.length] = writextag('b', null, {val:"0"});
+			font[font.length] = writextag('i', null);
+		}
+		if(dxfs[i].c) font[font.length] = writextag('color', null, {rgb: dxfs[i].c});
+		if(font.length > 0) {
+			font = font.join("");
+			dxf[dxf.length] = writextag('font', font);
+		}
+		bg = writextag('bgColor', null, {rgb: dxfs[i].bg});
+		pf = writextag('patternFill', bg);
+		if(dxfs[i].bg) dxf[dxf.length] = writextag('fill', pf);
+		dxf = dxf.join("");
+		o[o.length] = writextag('dxf', dxf);
 	}
 	o[o.length] = '</dxfs>';
+	return o.join("");
+}
+
+function write_colors(dxfs) {
+	var o = ['<colors><mruColors>'];
+	for(var i = 0; i != dxfs.length; ++i) {
+		if(dxfs[i].c) o[o.length] = writextag('color', null, {rgb: dxfs[i].c});
+		if(dxfs[i].bg) o[o.length] = writextag('color', null, {rgb: dxfs[i].bg});
+	}
+	o[o.length] = ['</mruColors></colors>'];
 	return o.join("");
 }
 
@@ -158,7 +179,7 @@ var STYLES_XML_ROOT = writextag('styleSheet', null, {
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 
 function write_sty_xml(wb, opts) {
-	var o = [], p = {}, w, d;
+	var o = [], p = {}, w, d, c;
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (STYLES_XML_ROOT);
 	if((w = write_numFmts(wb.SSF))) o[o.length] = (w);
@@ -170,7 +191,7 @@ function write_sty_xml(wb, opts) {
 	o[o.length] = ('<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>');
 	if((d = write_dxfs(opts.dxfs))) o[o.length] = (d);
 	o[o.length] = ('<tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>');
-
+	if((c = write_colors(opts.dxfs))) o[o.length] = (c);
 	if(o.length>2){ o[o.length] = ('</styleSheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }
