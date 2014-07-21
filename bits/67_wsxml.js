@@ -279,6 +279,7 @@ function write_ws_xml(idx, opts, wb) {
 	if(rdata.length) o[o.length] = (rdata);
 	if(o.length>sidx+1) { o[o.length] = ('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
 	if((ws['!cf']||[]).length > 0) o[o.length] = (write_ws_xml_cf(ws, opts, ws['!cf']));
+	if(ws['!pass']) o[o.length] = '<sheetProtection password="' + ws['!pass'] + '" sheet="1" objects="1" scenarios="1"/>';
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }
